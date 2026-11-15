@@ -81,13 +81,19 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: haxelib
-      - if: runner.os != 'macOS'
+      - if: runner.os == 'Windows' || (runner.os == 'Linux' && runner.arch != 'ARM64')
         uses: krdlab/setup-haxe@v1
         with:
           haxe-version: 4.3.6
       - if: runner.os == 'macOS'
         run: |
           brew install haxe
+          mkdir -p "$HOME/haxelib" && haxelib setup "$HOME/haxelib"
+      # setup-haxe has no Linux ARM64 build; Ubuntu packages one.
+      - if: runner.os == 'Linux' && runner.arch == 'ARM64'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y haxe
           mkdir -p "$HOME/haxelib" && haxelib setup "$HOME/haxelib"
       - run: |
           haxelib install hxnsl-*.zip --always
