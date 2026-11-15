@@ -5,19 +5,6 @@ import haxe.macro.Context;
 import haxe.macro.Expr;
 
 class Build {
-	/** The targets `-D hxnsl_targets=msl,hlsl,spirv,glsl` names; all four by default. **/
-	static function targets():Array<String> {
-		var all = ["msl", "hlsl", "spirv", "glsl"];
-		var named = Context.definedValue("hxnsl_targets");
-		if (named == null || named == "" || named == "1")
-			return all;
-		var chosen = [for (t in named.split(",")) StringTools.trim(t)];
-		for (t in chosen)
-			if (all.indexOf(t) < 0)
-				Context.fatalError('hxnsl_targets names $t; the targets are ${all.join(", ")}', Context.currentPos());
-		return chosen;
-	}
-
 	/** The source of the shader class `path`, for `@:import` and `@:extends`. **/
 	static function source(path:String):Ast.Expr {
 		switch (Context.follow(Context.getType(path))) {
@@ -31,11 +18,10 @@ class Build {
 	}
 
 	/**
-		The value `@:constants({name: value})` gives each `@const`, as the
-		tool's `key=value`: the native targets are written with every
-		pipeline constant fixed.
+		The value `@:constants({name: value})` gives each `@const`: the
+		native targets are written with every pipeline constant fixed.
 	**/
-	static function constants(local:haxe.macro.Type.ClassType, overrides:Array<{name:String, key:String}>):Array<String> {
+	static function constants(local:haxe.macro.Type.ClassType, overrides:Array<{name:String, key:String}>):Array<{name:String, key:String, value:String}> {
 		var given = new Map<String, {value:String, pos:Position}>();
 		for (m in local.meta.extract(":constants")) {
 			var fields = switch (m.params) {
@@ -58,74 +44,35 @@ class Build {
 		if (missing.length > 0)
 			Context.fatalError('the native targets need a value for each @const: give ${missing.join(", ")} in @:constants({...}), or define hxnsl_wgsl_only',
 				local.pos);
-		return [for (o in overrides) '${o.key}=${given.get(o.name).value}'];
+		return [for (o in overrides) {name: o.name, key: o.key, value: given.get(o.name).value}];
 	}
 
-	/** Adds each target's source, the layout, entry points and the targets' binding slots. **/
-	static function native(fields:Array<Field>, local:haxe.macro.Type.ClassType, wgsl:String, overrides:Array<{name:String, key:String}>, pos:Position) {
+	/**
+		Compiles the shader for every target with the tool, adds `LAYOUT` and
+		`ENTRY_POINTS`, then the fields of each of the shader's targets.
+	**/
+	static function native(fields:Array<Field>, local:haxe.macro.Type.ClassType, wgsl:String, layout:WgslOut.WgslLayout, pos:Position) {
 		var name = local.pack.concat([local.name]).join(".");
 		var tool = Tool.find();
 		if (tool == null)
 			Context.fatalError("hxnsl: no hxnsl tool to compile shaders with: set HXNSL_TOOL to its path, or define hxnsl_wgsl_only to emit WGSL alone",
 				pos);
-		var translated = Tool.translate(name, wgsl, constants(local, overrides), tool, pos);
-		var out = translated.json;
-		function add(name:String, type:ComplexType, value:Expr, doc:String)
-			fields.push({
-				name: name,
-				doc: doc,
-				access: [APublic, AStatic, AFinal],
-				kind: FVar(type, value),
-				pos: pos
-			});
+		var values = constants(local, layout.overrides);
+		var translated = Tool.translate(name, wgsl, [for (c in values) '${c.key}=${c.value}'], tool, pos);
+		var shader = new Compiled(local, pos, wgsl, layout, values, translated.json, translated.spirv);
+		fields.push(shader.field("LAYOUT", macro :Array<Array<hxnsl.Layout.LayoutEntry>>, Context.makeExpr(shader.groups, pos),
+			"Each bind group's bindings, with the stages that use them."));
+		fields.push(shader.field("ENTRY_POINTS", macro :Array<hxnsl.Layout.EntryPoint>, Context.makeExpr(shader.entryPoints, pos),
+			"The shader's entry points."));
 
-		var groups:Array<{group:Int, entries:Array<Dynamic>}> = out.groups;
-		var last = -1;
-		for (g in groups)
-			if (g.group > last)
-				last = g.group;
-		// A group the shader leaves out still takes its place, empty.
-		var layout = [
-			for (i in 0...last + 1) {
-				var found = Lambda.find(groups, g -> g.group == i);
-				found == null ? [] : found.entries;
-			}
-		];
-		add("LAYOUT", macro :Array<Array<hxnsl.Layout.LayoutEntry>>, Context.makeExpr(layout, pos),
-			"Each bind group's bindings, with the stages that use them.");
-		add("ENTRY_POINTS", macro :Array<hxnsl.Layout.EntryPoint>, Context.makeExpr(out.entryPoints, pos), "The shader's entry points.");
-
-		var wanted = targets();
-		if (wanted.indexOf("msl") >= 0) {
-			add("MSL", null, macro $v{(out.msl : String)}, "The shader as Metal Shading Language 2.1.");
-			add("MSL_SLOTS", macro :Array<hxnsl.Layout.MslEntry>, Context.makeExpr(out.native.msl, pos),
-				"Each entry point's Metal argument indices for the layout's bindings.");
-		}
-		if (wanted.indexOf("hlsl") >= 0) {
-			add("HLSL", null, macro $v{(out.hlsl : String)}, "The shader as HLSL, shader model 5.1.");
-			add("HLSL_SLOTS", macro :Array<hxnsl.Layout.HlslBinding>, Context.makeExpr(out.native.hlsl, pos),
-				"Each binding's HLSL register, or its sampler index.");
-		}
-		if (wanted.indexOf("spirv") >= 0) {
-			var resource = 'hxnsl/$name.spv';
-			Context.addResource(resource, translated.spirv);
-			fields.push({
-				name: "spirv",
-				doc: "The shader as SPIR-V 1.0. The descriptor set is the group, and the binding the binding.",
-				access: [APublic, AStatic],
-				kind: FFun({args: [], ret: macro :haxe.io.Bytes, expr: macro return haxe.Resource.getBytes($v{resource})}),
-				pos: pos
-			});
-		}
-		if (wanted.indexOf("glsl") >= 0) {
-			var missing:Null<String> = out.glslMissing;
-			if (missing != null)
-				add("GLSL_MISSING", null, macro $v{missing}, "Why WebGL2 cannot run this shader, which has no GLSL.");
-			else {
-				for (g in (out.glsl : Array<{entryPoint:String, stage:String, source:String}>))
-					add('GLSL_${g.stage.toUpperCase()}', null, macro $v{g.source}, 'The ${g.stage} stage as GLSL ES 3.00, for WebGL2.');
-				add("GLSL_BINDINGS", macro :Array<hxnsl.Layout.GlslBindings>, Context.makeExpr(out.native.glsl, pos),
-					"What each GLSL stage binds by name: its combined samplers and uniform blocks.");
+		var owner = [for (f in fields) f.name => "hxnsl"];
+		for (t in Targets.of(local)) {
+			shader.target = t;
+			for (f in t.build(shader)) {
+				if (owner.exists(f.name))
+					Context.fatalError('$name: the targets ${owner.get(f.name)} and ${t.name} both add ${f.name}', pos);
+				owner.set(f.name, t.name);
+				fields.push(f);
 			}
 		}
 	}
@@ -188,7 +135,7 @@ class Build {
 				constant('CONST_${o.name}', macro $v{o.key}, 'Pipeline constant key of `@const ${o.name}`.');
 			// Every other target's source is written here, so the program compiles no shader.
 			if (!Context.defined("hxnsl_wgsl_only"))
-				native(fields, local, wgsl, l.overrides, pos);
+				native(fields, local, wgsl, l, pos);
 		} catch (e:Ast.Error) {
 			Context.error(e.msg, e.pos);
 		}

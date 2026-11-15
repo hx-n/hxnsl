@@ -70,19 +70,25 @@ class Tool {
 		return '$os-$arch';
 	}
 
+	/** The cache: `HXNSL_CACHE`, else `hxnsl` under the system's temporary directory. **/
+	public static function cache():String {
+		var dir = Sys.getEnv("HXNSL_CACHE");
+		if (dir == null || dir == "") {
+			var temp = Sys.getEnv(Sys.systemName() == "Windows" ? "TEMP" : "TMPDIR");
+			dir = (temp == null || temp == "" ? "/tmp" : temp) + "/hxnsl";
+		}
+		return FileSystem.absolutePath(dir);
+	}
+
 	/**
 		Translates `wgsl` with each pipeline constant fixed by `constants`, as
 		`key=value`; fails the build with the tool's report if it rejects it.
 	**/
 	public static function translate(name:String, wgsl:String, constants:Array<String>, tool:String, pos:haxe.macro.Expr.Position):Translated {
-		var cache = Sys.getEnv("HXNSL_CACHE");
-		if (cache == null || cache == "") {
-			var temp = Sys.getEnv(Sys.systemName() == "Windows" ? "TEMP" : "TMPDIR");
-			cache = (temp == null || temp == "" ? "/tmp" : temp) + "/hxnsl";
-		}
+		var root = cache();
 		// Another build of the tool can write different output for the same WGSL.
 		var stamp = FileSystem.stat(tool).mtime.getTime();
-		var dir = '$cache/' + haxe.crypto.Md5.encode('$tool $stamp ${constants.join(" ")}\n$wgsl');
+		var dir = '$root/' + haxe.crypto.Md5.encode('$tool $stamp ${constants.join(" ")}\n$wgsl');
 		if (!FileSystem.exists('$dir/shader.json')) {
 			FileSystem.createDirectory(dir);
 			File.saveContent('$dir/shader.wgsl', wgsl);

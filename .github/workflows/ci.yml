@@ -76,6 +76,18 @@ jobs:
             echo "::error::Unset built"; exit 1
           fi
           grep -q "need a value for each @const: give fog" unset.txt || { cat unset.txt; exit 1; }
+      - name: Two targets adding one field fail the build
+        run: |
+          if haxe -lib hxnsl -cp test/clash --macro "ClashTargets.register()" --interp -main Clash 2> clash.txt; then
+            echo "::error::Clash built"; exit 1
+          fi
+          grep -q "the targets msl and twin both add MSL" clash.txt || { cat clash.txt; exit 1; }
+      - name: An unknown target name fails the build
+        run: |
+          if haxe -lib hxnsl-framework -cp test --interp -main Defines -D hxnsl_targets=msl,vulkan 2> unknown.txt; then
+            echo "::error::an unknown target built"; exit 1
+          fi
+          grep -q "hxnsl_targets names vulkan" unknown.txt || { cat unknown.txt; exit 1; }
       - name: The fields read back on a compiled target
         run: |
           haxe -lib hxnsl-framework -cp test -main Main -js out/main.js

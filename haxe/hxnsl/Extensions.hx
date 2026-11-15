@@ -18,6 +18,12 @@ class Extensions {
 
 	/** The extensions for the shader class `c`, in the order they were registered. **/
 	public static function of(c:ClassType):Array<Extension> {
+		var of = families(c);
+		return [for (r in registered) if (r.family == null || of.exists(r.family)) r.extension];
+	}
+
+	/** The families of `c`: its own path, and every interface and class it implements or extends. **/
+	public static function families(c:ClassType):Map<String, Bool> {
 		var families = new Map<String, Bool>();
 		function walk(c:ClassType) {
 			families.set(c.pack.concat([c.name]).join("."), true);
@@ -27,7 +33,7 @@ class Extensions {
 				walk(c.superClass.t.get());
 		}
 		walk(c);
-		return [for (r in registered) if (r.family == null || families.exists(r.family)) r.extension];
+		return families;
 	}
 }
 #end

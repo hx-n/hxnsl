@@ -2,12 +2,14 @@
 /**
 	A stand-in for a framework built on hxnsl: its shaders implement
 	`FrameworkShader`, and its extension gives them an `exposure` global in
-	its own bind group and a `luma` function. This directory is the
-	framework's haxelib, and its extraParams.hxml registers the extension.
+	its own bind group and a `luma` function. Its `Probe` target is the only
+	one they get. This directory is the framework's haxelib, and its
+	extraParams.hxml registers both.
 **/
 class Framework extends hxnsl.Extension {
 	public static function register() {
 		hxnsl.Extensions.register(new Framework(), "FrameworkShader");
+		hxnsl.Targets.register(new Probe(), "FrameworkShader");
 	}
 
 	override function functions():Array<hxnsl.Extension.ExternFunction> {
@@ -33,6 +35,26 @@ class Framework extends hxnsl.Extension {
 
 	override function group(name:String):Null<Int> {
 		return name == "frame" ? 1 : null;
+	}
+}
+
+/** A driver's target: a build step over the SPIR-V, and fields from its output. **/
+class Probe extends hxnsl.Target {
+	public function new() {
+		super("probe");
+	}
+
+	override public function build(s:hxnsl.Compiled):Array<haxe.macro.Expr.Field> {
+		var ran = false;
+		var out = s.step("probe 1", ["shader.spv" => s.spirv], dir -> {
+			ran = true;
+			sys.io.File.saveContent('$dir/length.txt', Std.string(sys.io.File.getBytes('$dir/shader.spv').length));
+		}, ["length.txt"]);
+		var length = Std.parseInt(out.get("length.txt").toString());
+		return [
+			s.field("PROBE_SPIRV_LENGTH", null, macro $v{length}, "The SPIR-V's length, as the step read it."),
+			s.field("PROBE_RAN", null, macro $v{ran}, "Whether the step ran for this shader, rather than coming from the cache.")
+		];
 	}
 }
 #end

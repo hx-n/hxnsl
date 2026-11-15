@@ -69,6 +69,22 @@ class Exposed implements FrameworkShader {
 	};
 }
 
+/** Exposed again: the same SPIR-V, so the probe's step runs for one of the two at most. **/
+class ExposedAgain implements FrameworkShader {
+	static var SRC = {
+		var output : { position : Vec4, color : Vec4 };
+		@param var tint : Vec4;
+
+		function vertex() {
+			output.position = vec4(0, 0, 0, 1);
+		}
+
+		function fragment() {
+			output.color = vec4(vec3(luma(tint.rgb) * exposure), 1);
+		}
+	};
+}
+
 class Tripled implements hxnsl.Shader {
 	static var SRC = {
 		@param var data : RWBuffer<Int>;

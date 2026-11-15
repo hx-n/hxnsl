@@ -27,6 +27,7 @@ class Main {
 		textures();
 		compute();
 		constants();
+		registered();
 		save();
 	}
 
@@ -118,6 +119,16 @@ class Main {
 		check(Fogged.MSL.indexOf("fog = true") >= 0, "the MSL is not written with fog set");
 	}
 
+	static function registered() {
+		// The framework's target replaces the built-ins for its shaders alone.
+		check(Exposed.PROBE_SPIRV_LENGTH > 20, 'the probe read ${Exposed.PROBE_SPIRV_LENGTH} bytes of SPIR-V');
+		for (f in ["MSL", "HLSL", "spirv", "GLSL_VERTEX"])
+			check(Reflect.field(Exposed, f) == null, 'Exposed has the built-in $f');
+		check(Reflect.field(Tinted, "PROBE_RAN") == null, "the probe reached a shader outside the family");
+		check(ExposedAgain.PROBE_SPIRV_LENGTH == Exposed.PROBE_SPIRV_LENGTH, "Exposed and ExposedAgain differ");
+		check(!(Exposed.PROBE_RAN && ExposedAgain.PROBE_RAN), "the step ran twice for the same input");
+	}
+
 	static function save() {
 		#if sys
 		var dir = Sys.getEnv("HXNSL_OUT_DIR");
@@ -133,7 +144,6 @@ class Main {
 		write("Tinted", Tinted.WGSL, Tinted.MSL, Tinted.HLSL, Tinted.spirv());
 		write("Textured", Textured.WGSL, Textured.MSL, Textured.HLSL, Textured.spirv());
 		write("Targets", Targets.WGSL, Targets.MSL, Targets.HLSL, Targets.spirv());
-		write("Exposed", Exposed.WGSL, Exposed.MSL, Exposed.HLSL, Exposed.spirv());
 		write("Tripled", Tripled.WGSL, Tripled.MSL, Tripled.HLSL, Tripled.spirv());
 		write("Fogged", Fogged.WGSL, Fogged.MSL, Fogged.HLSL, Fogged.spirv());
 		for (g in [["Tinted", Tinted.GLSL_VERTEX, Tinted.GLSL_FRAGMENT], ["Textured", Textured.GLSL_VERTEX, Textured.GLSL_FRAGMENT],
