@@ -8,7 +8,7 @@ import haxe.macro.Type.ClassType;
 import sys.FileSystem;
 import sys.io.File;
 
-/** One shader as the build has it, for a `Target` to build from. **/
+/** One compiled shader, as a `Target` sees it. **/
 @:allow(hxnsl.Build)
 class Compiled {
 	/** The shader class's dotted path. **/
@@ -77,7 +77,7 @@ class Compiled {
 		this.native = tool.native;
 	}
 
-	/** Fails the build at the shader, naming the target. **/
+	/** Fails compilation at the shader, naming the target. **/
 	public function error(message:String):Dynamic {
 		return Context.fatalError('$name: ${target.name}: $message', pos);
 	}

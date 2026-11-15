@@ -12,7 +12,7 @@ time.
 
 Heaps checks an HXSL shader when the program compiles, then links it with the
 other shaders of a render pass and writes the GPU API's source while the
-program runs. hxnsl checks, links and writes each shader during the build. A
+program runs. hxnsl checks, links and writes each shader at compile time. A
 shader's makeup is therefore fixed when the program compiles: one class, with
 the shaders it imports or extends. hxnsl does not combine shaders at run time.
 
@@ -21,7 +21,7 @@ The other differences:
 - Every shader class carries WGSL (WebGPU), MSL (Metal), HLSL (Direct3D 12),
   SPIR-V (Vulkan) and GLSL ES (WebGL2). No HXSL linker or translator ships in
   the program. The GPU API still compiles its own language at load time,
-  unless a [target](#targets) does that in the build too.
+  unless a [target](#targets) does that at compile time too.
 - Uniform offsets, bind groups and per-language binding slots are generated as
   constants, so host code binds by constant instead of reflecting on the
   shader.
@@ -34,8 +34,8 @@ The other differences:
   the other languages, the class supplies the values.
 - Frameworks (libraries whose shaders share globals and functions) can extend
   HXSL with their own functions, globals and bind groups.
-- Drivers can hook their own build steps and fields into the shaders they
-  handle, such as compiling MSL to a Metal library at build time.
+- Drivers can hook their own compile-time steps and fields into the shaders
+  they handle, such as compiling MSL to a Metal library.
 
 The language is Heaps' HXSL, and the type checker is ported from Heaps. See
 the [HXSL docs](https://heaps.io/documentation/hxsl.html) for the syntax.
@@ -72,7 +72,7 @@ haxe -lib hxnsl -main Main -hl main.hl
 ```
 
 hxnsl is tested with Haxe 4.3.6. A shader error is a Haxe compile error on
-the shader's line. After the build, each language is a static member of the
+the shader's line. Once the program compiles, each language is a static member of the
 class:
 
 ```haxe
@@ -235,8 +235,8 @@ targets are `hxnsl.targets.Msl`, `Hlsl`, `Spirv` and `Glsl`, named `msl`,
 
 A driver registers targets for its family of shaders, an interface extending
 `hxnsl.Shader` as with extensions. Those shaders then get the driver's targets
-and none of hxnsl's. This target compiles the MSL into a Metal library during
-the build:
+and none of hxnsl's. This target compiles the MSL into a Metal library at
+compile time:
 
 ```haxe
 class MetalLibrary extends hxnsl.Target {
@@ -257,7 +257,7 @@ class MetalLibrary extends hxnsl.Target {
 ```
 
 It runs `xcrun`, so it builds on macOS only. Elsewhere the step writes no
-library and the build fails. The driver's init macro registers it. Registering hxnsl's `msl` target as well
+library and compilation fails. The driver's init macro registers it. Registering hxnsl's `msl` target as well
 keeps `MSL` and `MSL_SLOTS` on those shaders:
 
 ```haxe
@@ -268,7 +268,7 @@ hxnsl.Targets.register(new hxnsl.targets.Msl(), "MetalShader");
 `hxnsl.Compiled` (`haxe/hxnsl/Compiled.hx`) is what `build` receives: `wgsl`,
 `msl`, `hlsl`, `spirv` and `glsl`, the layout, the slots and the `@const`
 values, and `step`, `resource` and `field`. A step that does not write each of
-its outputs fails the build, as do two targets that add the same field.
+its outputs fails compilation, as do two targets that add the same field.
 
 ## Defines
 
@@ -282,12 +282,12 @@ its outputs fails the build, as do two targets that add the same field.
 
 ## The tool
 
-The build compiles each shader's WGSL to the other languages with the
+At compile time, hxnsl translates each shader's WGSL to the other languages with the
 `hxnsl` command-line tool, which runs russl's compiler. The haxelib ships it
 prebuilt for macOS on Apple silicon and Intel, Linux on x86-64 and ARM64, and
 Windows on x86-64.
 
-The build runs the tool at the path in the `HXNSL_TOOL` environment variable,
+hxnsl runs the tool at the path in the `HXNSL_TOOL` environment variable,
 else the haxelib's `bin/<host>/hxnsl`, else `target/release` or
 `target/debug` in a clone of this repository. On another host, build it with
 `cargo build --release` and point `HXNSL_TOOL` at it.

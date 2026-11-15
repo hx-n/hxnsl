@@ -14,8 +14,9 @@ typedef Translated = {
 }
 
 /**
-	Runs the `hxnsl` tool over a shader's WGSL during the Haxe build. Results
-	are kept by the tool's build and the WGSL's hash in `HXNSL_CACHE`, or in a
+	Runs the `hxnsl` tool over a shader's WGSL at compile time. Results
+	are kept by a hash of the tool's path and modification time, the constants
+	and the WGSL, in `HXNSL_CACHE`, or in a
 	directory under the system's temporary directory.
 **/
 class Tool {
@@ -82,7 +83,7 @@ class Tool {
 
 	/**
 		Translates `wgsl` with each pipeline constant fixed by `constants`, as
-		`key=value`; fails the build with the tool's report if it rejects it.
+		`key=value`; fails compilation with the tool's report if it rejects it.
 	**/
 	public static function translate(name:String, wgsl:String, constants:Array<String>, tool:String, pos:haxe.macro.Expr.Position):Translated {
 		var root = cache();
