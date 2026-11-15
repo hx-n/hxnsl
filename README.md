@@ -314,6 +314,11 @@ and CI puts the other languages through their own compilers: spirv-val,
 glslangValidator, DXC and Apple's Metal compiler. CI builds the test shaders
 for the Haxe interpreter and for JavaScript.
 
+## Agent skill
+
+[`skills/hxnsl/SKILL.md`](https://github.com/hx-n/hxnsl/blob/main/skills/hxnsl/SKILL.md) describes the library for coding
+agents. The haxelib includes it.
+
 ## License
 
 MIT. The HXSL front end is adapted from Heaps, whose license is

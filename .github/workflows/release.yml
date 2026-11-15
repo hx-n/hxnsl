@@ -53,7 +53,7 @@ jobs:
       - run: |
           mkdir -p haxelib/bin
           for part in parts/tool-*/; do cp -R "$part." haxelib/bin/; done
-          cp -R haxe haxelib.json README.md LICENSE haxelib/
+          cp -R haxe haxelib.json README.md LICENSE skills haxelib/
           ls -R haxelib/bin
           version="$(sed -n 's/.*"version": "\(.*\)".*/\1/p' haxelib.json)"
           (cd haxelib && zip -qr "../hxnsl-$version.zip" .)
