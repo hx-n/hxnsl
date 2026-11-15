@@ -47,7 +47,7 @@ class Compiled {
 	/** Each target's binding slots, as `hxnsl.Layout`'s types: `msl`, `hlsl` and `glsl`. **/
 	public final native:{msl:Array<Dynamic>, hlsl:Array<Dynamic>, glsl:Array<Dynamic>};
 
-	/** The target being built, which names its resources and prefixes its errors. **/
+	/** The target running, which names its resources and prefixes its errors. **/
 	var target:Target;
 
 	function new(cls, pos, wgsl, layout, constants, tool:Dynamic, spirv) {
@@ -101,7 +101,7 @@ class Compiled {
 	}
 
 	/**
-		A build step, run once for each `key` and set of `inputs`: the inputs
+		A compile-time step, run once for each `key` and set of `inputs`: the inputs
 		are written by name to a directory of the cache, `run` is called with
 		that directory, and the files `outputs` names are read back. `key`
 		carries whatever else changes the result, such as the version of the
@@ -124,7 +124,7 @@ class Compiled {
 			run(dir);
 			var missing = [for (o in outputs) if (!FileSystem.exists('$dir/$o')) o];
 			if (missing.length > 0)
-				error('the build step left out ${missing.join(", ")}');
+				error('the step left out ${missing.join(", ")}');
 			File.saveContent(done, "");
 		}
 		return [for (o in outputs) o => File.getBytes('$dir/$o')];

@@ -5,7 +5,7 @@ edition = "2024"
 rust-version = "1.88"
 license = "MIT"
 repository = "https://github.com/hx-n/hxnsl"
-description = "Writes an hxnsl shader's WGSL for every GPU target during the Haxe build"
+description = "Writes an hxnsl shader's WGSL for every GPU target at compile time"
 publish = false
 
 [dependencies]

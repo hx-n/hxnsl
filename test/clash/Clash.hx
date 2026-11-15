@@ -1,4 +1,4 @@
-/** Fails to build: two of its targets add `MSL`. Built with `--macro ClashTargets.register()`. **/
+/** Fails to compile: two of its targets add `MSL`. Compiled with `--macro ClashTargets.register()`. **/
 class Clash implements hxnsl.Shader {
 	static var SRC = {
 		var output : { position : Vec4, color : Vec4 };

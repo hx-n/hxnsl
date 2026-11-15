@@ -38,7 +38,7 @@ class Framework extends hxnsl.Extension {
 	}
 }
 
-/** A driver's target: a build step over the SPIR-V, and fields from its output. **/
+/** A driver's target: a compile-time step over the SPIR-V, and fields from its output. **/
 class Probe extends hxnsl.Target {
 	public function new() {
 		super("probe");

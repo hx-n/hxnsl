@@ -25,7 +25,7 @@ class Tool {
 
 	/**
 		The tool: `HXNSL_TOOL`, else the one this haxelib ships for the host
-		under `bin/`, else a build of it in this checkout's `target/`.
+		under `bin/`, else the one compiled in this checkout's `target/`.
 	**/
 	public static function find():Null<String> {
 		if (looked)
@@ -87,7 +87,7 @@ class Tool {
 	**/
 	public static function translate(name:String, wgsl:String, constants:Array<String>, tool:String, pos:haxe.macro.Expr.Position):Translated {
 		var root = cache();
-		// Another build of the tool can write different output for the same WGSL.
+		// Another version of the tool can write different output for the same WGSL.
 		var stamp = FileSystem.stat(tool).mtime.getTime();
 		var dir = '$root/' + haxe.crypto.Md5.encode('$tool $stamp ${constants.join(" ")}\n$wgsl');
 		if (!FileSystem.exists('$dir/shader.json')) {

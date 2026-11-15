@@ -3,8 +3,8 @@
 [![CI](https://github.com/hx-n/hxnsl/actions/workflows/ci.yml/badge.svg)](https://github.com/hx-n/hxnsl/actions/workflows/ci.yml)
 
 Shaders for Haxe, written in [HXSL](https://heaps.io/documentation/hxsl.html),
-the shader language of the Heaps game engine, and compiled during the Haxe
-build to WGSL, Metal Shading Language (MSL), HLSL, SPIR-V and GLSL ES. Each
+the shader language of the Heaps game engine, and translated at compile
+time to WGSL, Metal Shading Language (MSL), HLSL, SPIR-V and GLSL ES. Each
 GPU API gets the shader in its own language, so nothing is translated at run
 time.
 
@@ -173,8 +173,8 @@ class Fogged implements hxnsl.Shader {
 
 `Fogged.WGSL` declares `override fog: bool;`, and a WebGPU program passes its
 value under the key `Fogged.CONST_fog` when it creates the pipeline.
-`Fogged.MSL` declares `constant bool fog = true;`. The
-build fails if a `@const` has no value, unless `-D hxnsl_wgsl_only` leaves
+`Fogged.MSL` declares `constant bool fog = true;`.
+Compilation fails if a `@const` has no value, unless `-D hxnsl_wgsl_only` leaves
 WGSL as the only language.
 
 ## Framework extensions
@@ -256,7 +256,7 @@ class MetalLibrary extends hxnsl.Target {
 }
 ```
 
-It runs `xcrun`, so it builds on macOS only. Elsewhere the step writes no
+It runs `xcrun`, so it works on macOS only. Elsewhere the step writes no
 library and compilation fails. The driver's init macro registers it. Registering hxnsl's `msl` target as well
 keeps `MSL` and `MSL_SLOTS` on those shaders:
 
@@ -292,7 +292,7 @@ else the haxelib's `bin/<host>/hxnsl`, else `target/release` or
 `target/debug` in a clone of this repository. On another host, build it with
 `cargo build --release` and point `HXNSL_TOOL` at it.
 
-Tool results and target build steps are cached in the directory named by the
+Tool results and targets' compile-time steps are cached in the directory named by the
 `HXNSL_CACHE` environment variable, or in `hxnsl` under the system's temporary
 directory. Deleting it clears the cache.
 
@@ -311,7 +311,7 @@ haxe -lib hxnsl-framework -cp test --interp -main Main
 `Main` throws at the first check that fails and prints nothing when all pass.
 `cargo test` tests the tool. The tool validates each shader's WGSL with Naga,
 and CI puts the other languages through their own compilers: spirv-val,
-glslangValidator, DXC and Apple's Metal compiler. CI builds the test shaders
+glslangValidator, DXC and Apple's Metal compiler. CI compiles the test shaders
 for the Haxe interpreter and for JavaScript.
 
 ## Agent skill

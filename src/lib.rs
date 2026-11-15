@@ -10,7 +10,7 @@ use russl_compiler::{GlslBindings, HlslSlot, MslSlot, NativeBindings, Stage};
 use serde_json::{Value, json};
 use std::collections::BTreeMap;
 
-/// What the build gets for one shader.
+/// What the macro gets for one shader.
 pub struct Output {
     /// MSL, HLSL, GLSL ES, the layout, entry points and native slots, as `shader.json` holds them.
     pub json: Value,

@@ -1,4 +1,4 @@
-/** Fails to build: the native targets need a value for `fog`. **/
+/** Fails to compile: the native targets need a value for `fog`. **/
 class Unset implements hxnsl.Shader {
 	static var SRC = {
 		var output : { position : Vec4, color : Vec4 };
