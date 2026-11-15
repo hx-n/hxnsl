@@ -108,7 +108,9 @@ jobs:
       - run: echo "ZIP=$(ls hxnsl-*.zip)" >> "$GITHUB_ENV"
       - env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" "$ZIP" --title "$GITHUB_REF_NAME" --notes "$(sed -n 's/.*"releasenote": "\(.*\)".*/\1/p' haxelib.json)"
+        run: |
+          notes="$(sed -n 's/.*"releasenote": "\(.*\)".*/\1/p' haxelib.json)"
+          gh release create "$GITHUB_REF_NAME" "$ZIP" --title "$GITHUB_REF_NAME" --notes "$notes"
       - uses: krdlab/setup-haxe@v1
         with:
           haxe-version: 4.3.6
