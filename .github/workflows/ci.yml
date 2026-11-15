@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  tool:
+    name: Tool, ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - uses: Swatinem/rust-cache@v2
+      - if: runner.os == 'Linux'
+        run: cargo fmt --check
+      - run: cargo clippy --all-targets -- -D warnings
+      - run: cargo test
+
+  # Builds the test shaders with the tool from this checkout, runs their
+  # checks, and puts every target's source through its own compiler.
+  shaders:
+    name: Shaders, ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    env:
+      HXNSL_CACHE: ${{ github.workspace }}/target/hxnsl-cache
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo build
+      - if: runner.os != 'macOS'
+        uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.6
+      - if: runner.os == 'macOS'
+        run: |
+          brew install haxe
+          mkdir -p "$HOME/haxelib" && haxelib setup "$HOME/haxelib"
+      - run: |
+          haxelib dev hxnsl .
+          haxelib dev hxnsl-framework test/framework
+      - name: Checks
+        run: HXNSL_OUT_DIR=out haxe -lib hxnsl-framework -cp test --interp -main Main
+      - name: Target defines
+        run: |
+          haxe -lib hxnsl-framework -cp test --interp -main Defines -D hxnsl_wgsl_only
+          haxe -lib hxnsl-framework -cp test --interp -main Defines -D hxnsl_targets=msl
+      - name: A @const without a value fails the build
+        run: |
+          if haxe -lib hxnsl -cp test/unset --interp -main Unset 2> unset.txt; then
+            echo "::error::Unset built"; exit 1
+          fi
+          grep -q "need a value for each @const: give fog" unset.txt || { cat unset.txt; exit 1; }
+      - name: The fields read back on a compiled target
+        run: |
+          haxe -lib hxnsl-framework -cp test -main Main -js out/main.js
+          node out/main.js
+
+      - name: Install spirv-val, glslang and DXC
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y spirv-tools glslang-tools
+          mkdir -p "$RUNNER_TEMP/dxc"
+          curl -sSL https://github.com/microsoft/DirectXShaderCompiler/releases/download/v1.9.2609/linux_dxc_2026_09_28.x86_x64.tar.gz \
+            | tar -xz -C "$RUNNER_TEMP/dxc"
+          echo "$RUNNER_TEMP/dxc/bin" >> "$GITHUB_PATH"
+          echo "LD_LIBRARY_PATH=$RUNNER_TEMP/dxc/lib" >> "$GITHUB_ENV"
+      - name: SPIR-V, HLSL and GLSL ES compile
+        if: runner.os == 'Linux'
+        working-directory: out
+        run: |
+          for f in *.spv; do spirv-val "$f"; done
+          for f in *.vert *.frag; do glslangValidator "$f" > /dev/null; done
+          for f in *.hlsl; do
+            if grep -q "void main(" "$f"; then
+              dxc -T cs_6_0 -E main "$f" -Fo /dev/null > /dev/null
+            else
+              dxc -T vs_6_0 -E vertex "$f" -Fo /dev/null > /dev/null
+              dxc -T ps_6_0 -E fragment "$f" -Fo /dev/null > /dev/null
+            fi
+          done
+          ls
+      - name: Install the Metal toolchain
+        if: runner.os == 'macOS'
+        run: xcrun -sdk macosx metal -v || xcodebuild -downloadComponent MetalToolchain
+      - name: MSL compiles
+        if: runner.os == 'macOS'
+        working-directory: out
+        run: for f in *.metal; do xcrun -sdk macosx metal -std=macos-metal2.1 -c "$f" -o /dev/null; done

@@ -1,0 +1,118 @@
+name: release
+
+# Builds the haxelib: the macro library and the tool for each host under
+# bin/<host>/, so a program needs only Haxe, and tries it on each platform
+# without Rust. A tag `v*` then publishes it as a release asset and submits it
+# to haxelib; run by hand, it is a dry run that keeps the ZIP as an artifact.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  tool:
+    name: tool, ${{ matrix.host }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-latest,     host: macos-aarch64,  target: aarch64-apple-darwin }
+          - { os: macos-latest,     host: macos-x86_64,   target: x86_64-apple-darwin }
+          - { os: ubuntu-24.04,     host: linux-x86_64,   target: x86_64-unknown-linux-gnu }
+          - { os: ubuntu-24.04-arm, host: linux-aarch64,  target: aarch64-unknown-linux-gnu }
+          - { os: windows-2022,     host: windows-x86_64, target: x86_64-pc-windows-msvc }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - run: cargo build --release --target ${{ matrix.target }}
+      - run: |
+          exe=hxnsl${{ runner.os == 'Windows' && '.exe' || '' }}
+          mkdir -p "bin/${{ matrix.host }}"
+          cp "target/${{ matrix.target }}/release/$exe" "bin/${{ matrix.host }}/"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tool-${{ matrix.host }}
+          path: bin
+
+  haxelib:
+    needs: tool
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          path: parts
+      - run: |
+          mkdir -p haxelib/bin
+          for part in parts/tool-*/; do cp -R "$part." haxelib/bin/; done
+          cp -R haxe haxelib.json README.md LICENSE haxelib/
+          ls -R haxelib/bin
+          version="$(sed -n 's/.*"version": "\(.*\)".*/\1/p' haxelib.json)"
+          (cd haxelib && zip -qr "../hxnsl-$version.zip" .)
+          echo "ZIP=hxnsl-$version.zip" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: haxelib
+          path: ${{ env.ZIP }}
+
+  # What a Haxe developer does, with no Rust: install the ZIP and build the
+  # test shaders against it, with the tool it ships for the host.
+  try:
+    name: try, ${{ matrix.os }}
+    needs: haxelib
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: test
+      - uses: actions/download-artifact@v4
+        with:
+          name: haxelib
+      - if: runner.os != 'macOS'
+        uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.6
+      - if: runner.os == 'macOS'
+        run: |
+          brew install haxe
+          mkdir -p "$HOME/haxelib" && haxelib setup "$HOME/haxelib"
+      - run: |
+          haxelib install hxnsl-*.zip --always
+          haxelib dev hxnsl-framework test/framework
+          haxe -lib hxnsl-framework -cp test --interp -main Main
+
+  publish:
+    needs: [haxelib, try]
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: haxelib
+      - run: echo "ZIP=$(ls hxnsl-*.zip)" >> "$GITHUB_ENV"
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" "$ZIP" --title "$GITHUB_REF_NAME" --notes "$(sed -n 's/.*"releasenote": "\(.*\)".*/\1/p' haxelib.json)"
+      - uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.6
+      # haxelib accepts a new project only from its first contributor.
+      - env:
+          HAXELIB_PASSWORD: ${{ secrets.HAXELIB_PASSWORD }}
+        run: haxelib submit "$ZIP" darmie "$HAXELIB_PASSWORD" --never < /dev/null
