@@ -110,11 +110,11 @@ jobs:
           for f in *.spv; do spirv-val "$f"; done
           for f in *.vert *.frag; do glslangValidator "$f" > /dev/null; done
           for f in *.hlsl; do
-            if grep -q "void main(" "$f"; then
-              dxc -T cs_6_0 -E main "$f" -Fo /dev/null > /dev/null
+            if grep -q "compute_main(" "$f"; then
+              dxc -T cs_6_0 -E compute_main "$f" -Fo /dev/null > /dev/null
             else
-              dxc -T vs_6_0 -E vertex "$f" -Fo /dev/null > /dev/null
-              dxc -T ps_6_0 -E fragment "$f" -Fo /dev/null > /dev/null
+              dxc -T vs_6_0 -E vertex_main "$f" -Fo /dev/null > /dev/null
+              dxc -T ps_6_0 -E fragment_main "$f" -Fo /dev/null > /dev/null
             fi
           done
           ls

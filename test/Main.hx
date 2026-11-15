@@ -84,14 +84,14 @@ class Main {
 		check(texture.type == "texture" && texture.sampleType == "float" && texture.viewDimension == "2d", "image is not a 2D float texture");
 		check(entry(Textured.LAYOUT, group, Textured.TEXTURE_image + 1).type == "sampler", "image's sampler is not the next binding");
 
-		var fragment = Lambda.find(Textured.MSL_SLOTS, e -> e.entryPoint == "fragment");
+		var fragment = Lambda.find(Textured.MSL_SLOTS, e -> e.entryPoint == "fragment_main");
 		check(fragment != null, "no Metal slots for the fragment stage");
 		function slot(binding:Int)
 			return Lambda.find(fragment.resources, r -> r.group == group && r.binding == binding);
 		check(slot(Textured.TEXTURE_image).kind == "texture", "image is not in Metal's texture table");
 		check(slot(Textured.TEXTURE_image + 1).kind == "sampler", "image's sampler is not in Metal's sampler table");
 
-		var glsl = Lambda.find(Textured.GLSL_BINDINGS, g -> g.entryPoint == "fragment");
+		var glsl = Lambda.find(Textured.GLSL_BINDINGS, g -> g.entryPoint == "fragment_main");
 		check(glsl.textures.length == 1, 'the fragment GLSL has ${glsl.textures.length} combined samplers, not 1');
 		var combined = glsl.textures[0];
 		check(combined.group == group && combined.binding == Textured.TEXTURE_image, "the combined sampler is not image");

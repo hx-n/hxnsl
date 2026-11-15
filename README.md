@@ -92,7 +92,7 @@ var webgl2:Array<String> = [Textured.GLSL_VERTEX, Textured.GLSL_FRAGMENT];
 | `GLSL_VERTEX`, `GLSL_FRAGMENT`, `GLSL_BINDINGS` | GLSL ES 3.00 for WebGL2, and the uniform names each stage binds its textures and uniform buffers by. |
 | `GLSL_MISSING` | Only when WebGL2 cannot run the shader (a compute shader, or one with storage buffers): a string saying why. The GLSL fields are then absent. |
 | `LAYOUT` | Each bind group's bindings, with the stages that use them, as WebGPU's `layout: "auto"` derives them. A bind group number the shader skips is an empty array. |
-| `ENTRY_POINTS` | Each entry point's name, stage and workgroup size. |
+| `ENTRY_POINTS` | Each entry point's name, stage and workgroup size. The names are `vertex_main`, `fragment_main` and `compute_main`, and every language keeps them. |
 | `PARAMS_SIZE`, `PARAMS_<name>` | The uniform buffer that holds the `@param` values: its size, and each value's offset, in bytes. |
 | `PARAMS_GROUP`, `PARAMS_BINDING` | That buffer's bind group and binding. |
 | `TEXTURE_<name>`, `TEXTURE_<name>_GROUP` | A texture's binding and bind group. Its sampler has the next binding. |
@@ -114,7 +114,7 @@ for (i in 0...4)
 	params.setFloat(Textured.PARAMS_tint + i * 4, 1.0);
 
 // Where Metal's fragment stage reads `image`.
-var fragment = Lambda.find(Textured.MSL_SLOTS, e -> e.entryPoint == "fragment");
+var fragment = Lambda.find(Textured.MSL_SLOTS, e -> e.entryPoint == "fragment_main");
 var image = Lambda.find(fragment.resources,
 	r -> r.group == Textured.TEXTURE_image_GROUP && r.binding == Textured.TEXTURE_image);
 trace(image.kind, image.index); // texture, 0: index 0 of Metal's texture table

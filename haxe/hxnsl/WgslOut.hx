@@ -25,8 +25,9 @@ typedef WgslLayout = {
 }
 
 /**
-	Prints linked HXSL stages as one WGSL module: `vertex` and `fragment`
-	entry points, or `main` for a compute shader.
+	Prints linked HXSL stages as one WGSL module: `vertex_main` and
+	`fragment_main` entry points, or `compute_main` for a compute shader.
+	No target reserves those names, so every language keeps them.
 
 	Params and globals sit in uniform blocks, `params` unless an extension
 	chooses another, each a struct laid out by WGSL's uniform rules. In each
@@ -1027,17 +1028,17 @@ class WgslOut implements WgslContext {
 			}
 		var head:String;
 		if (compute) {
-			head = '@compute @workgroup_size(${workgroup.join(", ")})\nfn main(${args.join(", ")}) {\n';
+			head = '@compute @workgroup_size(${workgroup.join(", ")})\nfn compute_main(${args.join(", ")}) {\n';
 		} else if (stageKind == Vertex) {
 			if (inputs.length > 0) {
 				args.unshift("attributes: VertexInput");
 				copies.unshift("\tvin = attributes;\n");
 			}
-			head = '@vertex\nfn vertex(${args.join(", ")}) -> Varyings {\n';
+			head = '@vertex\nfn vertex_main(${args.join(", ")}) -> Varyings {\n';
 		} else {
 			args.unshift("varyings: Varyings");
 			copies.unshift("\tfin = varyings;\n");
-			head = '@fragment\nfn fragment(${args.join(", ")})${targets.length > 0 ? " -> FragmentOutput" : ""} {\n';
+			head = '@fragment\nfn fragment_main(${args.join(", ")})${targets.length > 0 ? " -> FragmentOutput" : ""} {\n';
 		}
 		var tail = compute ? "" : '\t${stageReturn()};\n';
 		return head + copies.join("") + statements + tail + "}";
