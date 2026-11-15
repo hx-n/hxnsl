@@ -4,9 +4,9 @@
 
 Shaders for Haxe, written in [HXSL](https://heaps.io/documentation/hxsl.html),
 the shader language of the Heaps game engine, and compiled during the Haxe
-build to WGSL, Metal Shading Language (MSL), HLSL, SPIR-V and GLSL ES. A
-program hands each GPU API a shader in that API's own language, and translates
-no shader at run time.
+build to WGSL, Metal Shading Language (MSL), HLSL, SPIR-V and GLSL ES. Each
+GPU API gets the shader in its own language, so nothing is translated at run
+time.
 
 ## How it differs from Heaps
 
