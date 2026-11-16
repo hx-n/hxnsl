@@ -2,7 +2,7 @@
   "name": "hxnsl",
   "url": "https://github.com/hx-n/hxnsl",
   "license": "MIT",
-  "tags": ["shader", "hxsl", "gpu", "wgsl", "metal", "hlsl", "spirv", "glsl", "webgpu", "vulkan", "macro"],
+  "tags": ["shader", "hxsl", "gpu", "wgsl", "metal", "hlsl", "spirv", "glsl", "webgpu", "vulkan", "macro", "hxcpp", "hashlink", "native", "cross", "wasm"],
   "description": "Shaders written in Haxe, translated at compile time to WGSL, MSL, HLSL, SPIR-V and GLSL ES.",
   "contributors": ["darmie", "rayzor"],
   "version": "0.2.0",
