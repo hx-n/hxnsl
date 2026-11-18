@@ -323,3 +323,9 @@ agents. The haxelib includes it.
 
 MIT. The HXSL front end is adapted from Heaps, whose license is
 [`haxe/hxnsl/LICENSE.heaps`](haxe/hxnsl/LICENSE.heaps).
+
+## Third-party notices
+
+Dependency licenses and redistribution notices are in
+[third-party/NOTICES.md](https://github.com/hx-n/hxnsl/blob/main/third-party/NOTICES.md). Retain the applicable
+notices when redistributing binaries.

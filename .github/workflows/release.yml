@@ -29,6 +29,7 @@ jobs:
           - { os: windows-2022,     host: windows-x86_64, target: x86_64-pc-windows-msvc }
     steps:
       - uses: actions/checkout@v4
+      - run: python3 scripts/third_party_notices.py --check
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.target }}
@@ -53,7 +54,7 @@ jobs:
       - run: |
           mkdir -p haxelib/bin
           for part in parts/tool-*/; do cp -R "$part." haxelib/bin/; done
-          cp -R haxe haxelib.json README.md LICENSE skills haxelib/
+          cp -R haxe haxelib.json README.md LICENSE skills third-party haxelib/
           ls -R haxelib/bin
           version="$(sed -n 's/.*"version": "\(.*\)".*/\1/p' haxelib.json)"
           (cd haxelib && zip -qr "../hxnsl-$version.zip" .)
