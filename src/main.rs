@@ -11,20 +11,20 @@ use std::process::ExitCode;
 fn main() -> ExitCode {
     let args: Vec<String> = std::env::args().skip(1).collect();
     let [wgsl, out, constants @ ..] = args.as_slice() else {
-        eprintln!("usage: hxnsl <shader.wgsl> <out dir> [key=value ...]");
+        hxn::log::error!(target: "hxnsl", "usage: hxnsl <shader.wgsl> <out dir> [key=value ...]");
         return ExitCode::from(2);
     };
     let constants: Vec<(&str, f64)> = match constants.iter().map(|c| constant(c)).collect() {
         Ok(c) => c,
         Err(message) => {
-            eprintln!("{message}");
+            hxn::log::error!(target: "hxnsl", "{message}");
             return ExitCode::from(2);
         }
     };
     match run(Path::new(wgsl), Path::new(out), &constants) {
         Ok(()) => ExitCode::SUCCESS,
         Err(message) => {
-            eprintln!("{message}");
+            hxn::log::error!(target: "hxnsl", "{message}");
             ExitCode::FAILURE
         }
     }

@@ -1,6 +1,6 @@
 [package]
 name = "hxnsl"
-version = "0.2.0"
+version = "0.2.1"
 edition = "2024"
 rust-version = "1.88"
 license = "MIT"
@@ -9,6 +9,7 @@ description = "Writes an hxnsl shader's WGSL for every GPU target at compile tim
 publish = false
 
 [dependencies]
+hxn = { git = "https://github.com/hx-n/hxn.git", tag = "v0.3.9" }
 russl_compiler = { git = "https://github.com/project-blinc/russl", tag = "v0.3.2" }
 # The naga russl_compiler uses, for the bind group layout it does not report for WGSL.
 naga = { version = "~26.0", features = ["wgsl-in"] }

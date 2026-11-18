@@ -25,6 +25,9 @@ When redistributing binaries, retain the applicable notices and license texts.
 | hashbrown 0.15.5 | MIT OR Apache-2.0 | [LICENSE-APACHE](licenses/hashbrown-0.15.5/LICENSE-APACHE), [LICENSE-MIT](licenses/hashbrown-0.15.5/LICENSE-MIT) |
 | hashbrown 0.17.1 | MIT OR Apache-2.0 | [LICENSE-APACHE](licenses/hashbrown-0.17.1/LICENSE-APACHE), [LICENSE-MIT](licenses/hashbrown-0.17.1/LICENSE-MIT) |
 | hexf-parse 0.2.1 | CC0-1.0 | [LICENSE-CC0](licenses/hexf-parse-0.2.1/LICENSE-CC0) |
+| hxn 0.3.9 | Apache-2.0 | [LICENSE](licenses/hxn-0.3.9/LICENSE) |
+| hxn-abi 0.3.9 | Apache-2.0 | [LICENSE](licenses/hxn-abi-0.3.9/LICENSE) |
+| hxn-macros 0.3.9 | Apache-2.0 | [LICENSE](licenses/hxn-macros-0.3.9/LICENSE) |
 | indexmap 2.14.2 | Apache-2.0 OR MIT | [LICENSE-APACHE](licenses/indexmap-2.14.2/LICENSE-APACHE), [LICENSE-MIT](licenses/indexmap-2.14.2/LICENSE-MIT) |
 | itoa 1.0.19 | MIT OR Apache-2.0 | [LICENSE-APACHE](licenses/itoa-1.0.19/LICENSE-APACHE), [LICENSE-MIT](licenses/itoa-1.0.19/LICENSE-MIT) |
 | libm 0.2.16 | MIT | [LICENSE.txt](licenses/libm-0.2.16/LICENSE.txt) |

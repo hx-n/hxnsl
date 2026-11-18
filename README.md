@@ -329,3 +329,9 @@ MIT. The HXSL front end is adapted from Heaps, whose license is
 Dependency licenses and redistribution notices are in
 [third-party/NOTICES.md](https://github.com/hx-n/hxnsl/blob/main/third-party/NOTICES.md). Retain the applicable
 notices when redistributing binaries.
+
+## Logging
+
+The compiler tool reports diagnostics through the core logger on stderr.
+Compiler errors still stop compilation; application runtime sinks belong to
+the program, which runs separately from this tool.

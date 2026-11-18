@@ -108,9 +108,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dfa686283ad6dd069f105e5ab091b04c62850d3e4cf5d67debad1933f55023df"
 
 [[package]]
-name = "hxnsl"
-version = "0.2.0"
+name = "hxn"
+version = "0.3.9"
+source = "git+https://github.com/hx-n/hxn.git?tag=v0.3.9#562fc8b8bd214c7339baeea92c7aa7c0b7bffc9b"
 dependencies = [
+ "hxn-abi",
+ "hxn-macros",
+]
+
+[[package]]
+name = "hxn-abi"
+version = "0.3.9"
+source = "git+https://github.com/hx-n/hxn.git?tag=v0.3.9#562fc8b8bd214c7339baeea92c7aa7c0b7bffc9b"
+
+[[package]]
+name = "hxn-macros"
+version = "0.3.9"
+source = "git+https://github.com/hx-n/hxn.git?tag=v0.3.9#562fc8b8bd214c7339baeea92c7aa7c0b7bffc9b"
+
+[[package]]
+name = "hxnsl"
+version = "0.2.1"
+dependencies = [
+ "hxn",
  "naga",
  "russl_compiler",
  "serde_json",

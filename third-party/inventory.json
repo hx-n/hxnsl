@@ -2,11 +2,11 @@
   "inputs": [
     {
       "path": "Cargo.lock",
-      "sha256": "d4ab708602a8eaff3faedba1110800bdbb8b71409bf6adbd63f3aefc8096c932"
+      "sha256": "c48dbecec3a1f11fe67efabce3e40102c5336dec12dd455df0f940562e8675d5"
     },
     {
       "path": "Cargo.toml",
-      "sha256": "642137d334493433986693baa45027f4c01dc49dd1f976877ffcb31af96a9d82"
+      "sha256": "2a370eae9cffa52fe0d21e570372806c2cc9bc8d02a1752072ea7dccd53a787f"
     }
   ],
   "packages": [
@@ -168,6 +168,36 @@
       "source": "registry+https://github.com/rust-lang/crates.io-index",
       "files": [
         "licenses/hexf-parse-0.2.1/LICENSE-CC0"
+      ]
+    },
+    {
+      "name": "hxn",
+      "version": "0.3.9",
+      "license": "Apache-2.0",
+      "repository": "https://github.com/hx-n/hxn",
+      "source": "git+https://github.com/hx-n/hxn.git?tag=v0.3.9#562fc8b8bd214c7339baeea92c7aa7c0b7bffc9b",
+      "files": [
+        "licenses/hxn-0.3.9/LICENSE"
+      ]
+    },
+    {
+      "name": "hxn-abi",
+      "version": "0.3.9",
+      "license": "Apache-2.0",
+      "repository": "https://github.com/hx-n/hxn",
+      "source": "git+https://github.com/hx-n/hxn.git?tag=v0.3.9#562fc8b8bd214c7339baeea92c7aa7c0b7bffc9b",
+      "files": [
+        "licenses/hxn-abi-0.3.9/LICENSE"
+      ]
+    },
+    {
+      "name": "hxn-macros",
+      "version": "0.3.9",
+      "license": "Apache-2.0",
+      "repository": "https://github.com/hx-n/hxn",
+      "source": "git+https://github.com/hx-n/hxn.git?tag=v0.3.9#562fc8b8bd214c7339baeea92c7aa7c0b7bffc9b",
+      "files": [
+        "licenses/hxn-macros-0.3.9/LICENSE"
       ]
     },
     {
